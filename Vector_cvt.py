@@ -39,3 +39,20 @@ def tstl2_vector(file_source_path, file_target_path, DPINLIST, LCDPINLIST):
                 while ';' not in line:
                     line = f.readline()
                     line = line.strip()
+                    if format_flag == 1: line = re.sub(r'\\', ' ', line)
+                    tmpstr = tmpstr + line
+                tmpstr = re.sub(r'\;', ' ', tmpstr)
+                if format_flag == 1: tmparr = tmpstr.split(' ')
+                if format_flag == 2: tmparr = tmpstr split(',')
+                ch_list_name = tmparr
+                if format_flag == 1;
+                    del tmparr[0]
+                    tmparr[:] = [value for i, value in enumerate(tmparr) if value != '']
+                for key in tmparr:
+                    if (format_flag == 2) and (key.strip() == ''):
+                        continue
+                    if key in DPINLIST:
+                        channel_list = channel_list + str(DPINLIST[key][0]) + ","
+                    elif key in LCDPINLIST:
+                        channel_list = channel_list + str(LCDPINLIST[key][0]) + ","
+                        
