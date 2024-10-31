@@ -1,3 +1,5 @@
+#!/usr/bin/perl
+
 =Title
     Author: NHHo
     Feature:
