@@ -161,6 +161,66 @@ if ($mode == 0) {
     }
     close (f_target);
     close (f_r1);
+} elsif ($mode == 1) {
+    open (f_r1, "< $ver_arr[1]");
+    open (f_target, "+> $out_dir/Histogram_Data.csv");
+    while ($line_r1 = <f_r1>) {
+        chomp $line_r1;
+        if ($line_r1 =~ /\:/) {
+            $st_flag = 1;
+        }
+        if ($st_flag == 1) {
+            $id = $line_r1;
+            print f_target "$line_r1\n";
+            $line_r1 = <f_r1>; # Unit
+            print f_target "$line_r1";
+            $line_r1 = <f_r1>; # X_Coor
+            print f_target "$line_r1";
+            chomp $line_r1;
+            @f1_xarr = split ",", $line_r1;
+            $line_r1 = <f_r1>; # Llimit
+            print f_target "$line_r1";
+            $line_r1 = <f_r1>; # Y
+            print f_target "$line_r1";
+            open (f_r2, "< $ver_arr[0]");
+            while ($line_r2 = <f_r2>) {
+                chomp $line_r2;
+                if ($line_r2 eq $id) {
+                    $line_r2 = <f_r2>; # Unit
+                    $line_r2 = <f_r2>; # X_Coor
+                    chomp $line_r2;
+                    @f2_xarr = split ",", $line_r2;
+                    $line_r2 = <f_r2>; # Llimit
+                    $line_r2 = <f_r2>; # Y
+                    chomp $line_r2;
+                    @f2_yarr = split ",", $line_r2;
+                    for $i (0..@f1_xarr-1) {
+                        for $j (0..@f2_xarr-1) {
+                            if ($f2_xarr[$j] eq $f1_xarr[$i]) {
+                                push @f2_n_yarr, $f2_yarr[$j];
+                                write_flag = 1;
+                                last;
+                            }
+                        }
+                        if ($write_flag == 0) {
+                            push @f2_n_yarr, 0;
+                        } else {
+                            $write_flag = 0;
+                        }
+                    }
+                    $tmp_str = join ",", @f2_n_yarr;
+                    print f_target "$tmp_str\n";
+                    last;
+                }
+            }
+            close (f_r2);
+            $line_r1 = <f_r1>; # Hlimit
+            print f_target "$line_r1\n";
+            &initial();
+        }
+    }
+    close (f_target);
+    close (f_r1);
 }
 
 #========== Remove TMP dir ==========#
@@ -185,4 +245,9 @@ sub initial() {
     $highlimit_str = "Hlimit";
     $tmp_yvalue = 0;
     $write_flag = 0;
+
+    @f1_xarr = ();
+    @f2_xarr = ();
+    @f2_yarr = ();
+    @f2_n_yarr = ();
 }
