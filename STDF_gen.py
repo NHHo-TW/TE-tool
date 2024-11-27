@@ -269,3 +269,174 @@ class ND4Cap():
                         temp_arr = self.die_xy[coor_xy]
                         label = str(temp_arr[2]) + '_' + str(test_id)
                     temp = [x for x in line.split(' ') if x != '']
+                    if ('FAIL' in temp[1]) or ('OVERFLOW' in temp[1]) or ('ERROR' in temp[1]):
+                        #if 'OVERFLOW' or 'ERROR' in temp[1]: temp[2] = '9999'
+                        self.res[label] = self.unit_transfer(temp[2])[0]
+                        temp_arr1 = [test_id,]
+                        temp_arr2 = [self.unit_transfer(temp[3])[0],]
+                        self.h_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                        temp_arr2 = [self.unit_transfer(temp[4])[0],]
+                        self.l_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                        temp_arr2 = [self.unit_transfer(temp[2])[1],]
+                        self.unit.update(dict(zip(temp_arr1, temp_arr2)))
+                    else: # PASS
+                        self.res[label] = self.unit_transfer(temp[1])[0]
+                        temp_arr1 = [test_id,]
+                        if re.findall('\d+', temp[2]):
+                            temp_arr2 = [self.unit_transfer(temp[2])[0],]
+                            self.h_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                            temp_arr2 = [self.unit_transfer(temp[3])[0],]
+                            self.l_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                        else: # spec: None
+                            temp_arr2 = [temp[2],]
+                            self.h_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                            temp_arr2 = [temp[3],]
+                            self.l_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                        temp_arr2 = [self.unit_transfer(temp[1])[1],]
+                        self.unit.update(dict(zip(temp_arr1, temp_arr2)))
+                    test_item_idx += 1
+                elif (meas_context_flag): # IM/VM
+                    temp = [x for x in line.split(' ') if x != '']
+                    dut_assign = int(temp[-1]) # get dut no.
+                    sample_info = multi_site[dut_assign]
+                    if dut_assign != pre_dut_assign:
+                        test_item_idx = 1
+                        pre_dut_assign = dut_assign
+                    pin_name = str(temp[-2])
+
+                    test_id_ex = str(test_id) + '_' + str(test_item_idx)
+                    temp_arr1 = [test_id_ex,]
+                    temp_arr2 = [item,]
+                    temp_arr3 = [pin_name,]
+                    #if dut_assign == 1:
+                    self.test_item_dic.update(dict(zip(temp_arr1, temp_arr2)))
+                    self.dpin.update(dict(zip(temp_arr1, temp_arr3)))
+                    if self.cover_enable == False:
+                        label = str(sample_info[2]) + '_' + str(test_id_ex) # sample_item
+                    elif self.cover_enable == True:
+                        label = ""
+                        coor_xy = 'X' + str(sample_info[4]) + 'Y' + str(sample_info[5])
+                        temp_arr = self.die_xy[coor_xy]
+                        label = str(temp_arr[2]) + '_' + str(test_id_ex)
+                    if ('FAIL' in temp[1]) or ('OVERFLOW' in temp[1]) or ('ERROR' in temp[1]):
+                        #if 'OVERFLOW' or 'ERROR' in temp[1]: temp[2] = '9999'
+                        self.res[label] = self.unit_transfer(temp[2])[0]
+                        temp_arr1 = [test_id_ex,]
+                        temp_arr2 = [self.unit_transfer(temp[3])[0],]
+                        self.h_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                        temp_arr2 = [self.unit_transfer(temp[4])[0],]
+                        self.l_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                        temp_arr2 = [self.unit_transfer(temp[2])[1],]
+                        self.unit.update(dict(zip(temp_arr1, temp_arr2)))
+                    else: # PASS
+                        self.res[label] = self.unit_transfer(temp[1])[0]
+                        temp_arr1 = [test_id_ex,]
+                        if re.findall('\d+', temp[2]):
+                            temp_arr2 = [self.unit_transfer(temp[2])[0],]
+                            self.h_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                            temp_arr2 = [self.unit_transfer(temp[3])[0],]
+                            self.l_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                        else: # spec: None
+                            temp_arr2 = [temp[2],]
+                            self.h_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                            temp_arr2 = [temp[3],]
+                            self.l_limit.update(dict(zip(temp_arr1, temp_arr2)))
+                        temp_arr2 = [self.unit_transfer(temp[1])[1],]
+                        self.unit.update(dict(zip(temp_arr1, temp_arr2)))
+                    test_item_idx += 1
+
+    """ group database and write csv """
+    def write_csv(self):
+        field = ['', 'TestTime', 'Wafer', 'Sample', 'DUT', 'X', 'Y', 'BIN']
+        #samples = sorted(die.key()) # DUT chaos
+        samples = self.die.keys()
+        k_items = self.test_item_dic.keys()
+        v_items = self.test_item_dic.value()
+        with open(self.csv_file, 'w', newline = '') as csv_file: # CSV write
+            field_names = ['', '', '', '', '', '', '', 'Test ID'] + [item for item in k_items]
+            writer = csv.DictWriter(csv_file, field_names = field_names)
+            writer.writeheader()
+            field_names = ['', '', '', '', '', '', '', 'Test Name'] + [item for item in v_items]
+            csv.writer(csv_file).writerow(field_names)
+            #field_names = ['', '', '', '', '', '', '', 'DPIN']
+            #csv.writer(csv_file).writerow(field_names)
+            self.setting_arr_fill(csv_file, 'DPIN', self.dpin)
+            self.setting_arr_fill(csv_file, 'Hlimit', self.h_limit)
+            self.setting_arr_fill(csv_file, 'Llimit', self.l_limit)
+            self.setting_arr_fill(csv_file, 'Unit', self.unit)
+            field_names = field + [item for item in k_items]
+            csv.writer(csv_file).writerow(field)
+            writer = csv.DictWriter(csv_file, field_names = field_names)
+            #writer.writeheader()
+            shift_i = 0
+            for i, sample in enumerate(samples):
+                r = {}
+                if int(self.die[sample][4]) < 0: # X < 0, fake data (XY - 99999)
+                    shift_i += 1
+                    continue
+                for k_items, v_items in self.test_item_dic.items():
+                    key = str(sample) + '_' + str(k_items) # recover key name
+                    if key in self.res.keys():
+                        name = field + [k_items]
+                        value = [i - shift_i] + self.die[sample] + [self.res[key]]
+                        r.update(dict(zip(name, value)))
+                        self.res.pop(key) # delet row data, accelerate
+                    elif sample in self.die.keys():
+                        name = field
+                        value = fieldvalue = [i - shift_i] + self.die[sample]
+                        r.update(dict(zip(name, value))) # not delete, reused
+                writer.writerow(r)
+            csv_file.close()
+
+    def setting_arr_fill(self, csv_file, title, target_dict):
+        field = ['', '', '', '', '', '', '', title]
+        r = {}
+        for k_items, v_items in self.test_item_dic.items():
+            #name = field + [v_item]
+            name = field + [k_items]
+            value = field + [target_dict[k_items]]
+            r.update(dict(zip(name, value)))
+
+        #field_names = field + [item for item in self.test_item_dic.values()]
+        field_names = field + [item for item in self.test_item_dic.keys()]
+        writer = csv.DictWriter(csv_file, field_names = field_names)
+        writer.writerow(r)
+
+""" main """
+if __name__ == '__name__':
+    start = time() # 計時
+    file_time = 0
+    file_last_time = start
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    in_dir_path = dir_path + "/IN/"
+    out_dir_path = dir_path + "/OUT/"
+    if not os.path.isdir(out_dir_path):
+        os.mkdir(out_dir_path)
+    all_file_name = os.listdir(in_dir_path)
+
+    cover_enable = True
+
+    for file in all_file_name:
+        #initial_par("all")
+        file_name = file[:-4]
+        #file_source = open(in_dir_path + file, 'r', encoding = 'UTF-8') # to avoid "encoding = cp950" issue
+        #file_target = open(out_dir_path + file_name + '.csv', 'w')
+        source_name = file_name + '.log'
+        target_name = file_name + '.csv'
+
+        yyds = ND4Cap(cover_enable, in_dir_path, out_dir_path, source_name, target_name)
+        yyds.collect_data()
+        yyds.write_csv()
+
+        file_time_title = 'file_time:' + str(file)
+        file_time = time()
+        time_counter = format(file_time - file_last_time)
+        file_last_time = file_time
+        print('file_time {}: {:.2f} s'.format(file_time_title, float(time_counter)))
+        Test = yyds.TEST
+        print (TEST)
+    end = time()
+    time_counter = format(end - start)
+    print('END {}: {:.2f} s'.format(__name, float(time_counter)))
+    # input("Please press the Enter key to proceed") #systemp pause code
