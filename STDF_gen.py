@@ -90,7 +90,7 @@ class ND4Cap():
                 # datetime
                 if 'ADVANTEST DataLog' in line:
                     all_info = [line.replace(' ADVANTEST DataLog: ', '').replace('*', '')]
-                    multi_site        = ()
+                    multi_site        = {}
                     pj_context_flag   = False
                     vj_context_flag   = False
                     meas_context_flag = False
@@ -99,7 +99,7 @@ class ND4Cap():
                     continue
                 elif 'Viewpoint DataLog' in line:
                     all_info = [line.replace(' Viewpoint DataLog: ', '').replace('*', '')]
-                    multi_site        = ()
+                    multi_site        = {}
                     pj_context_flag   = False
                     vj_context_flag   = False
                     meas_context_flag = False
@@ -136,7 +136,7 @@ class ND4Cap():
                     continue
 
                 # bin
-                if ('DUT' in line) and (not cat_context_flag):
+                if ('DUT :' in line) and (not cat_context_flag):
                     cat_context_flag = True
                     temp = [x for x in line.split(' ') if x != '']
                     dut_assign = int(temp[-1]) # get dut no.
@@ -403,7 +403,7 @@ class ND4Cap():
         writer.writerow(r)
 
 """ main """
-if __name__ == '__name__':
+if __name__ == '__main__':
     start = time() # 計時
     file_time = 0
     file_last_time = start
