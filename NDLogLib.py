@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-V03 - 資料改用 TEST ID 作為對應輸出參考
-    - 新增 cover_enable 功能
-V04 - 新增 IM/VM 資料輸出
+V06 - 重新命名 NDLogLib.py，做為未來函式庫
+    - 新增 shmoo_log_format
 V05 - 修復 value 取值問題
     - 將單位轉換的函式改用字典完成
+V04 - 新增 IM/VM 資料輸出
+V03 - 資料改用 TEST ID 作為對應輸出參考
+    - 新增 cover_enable 功能
 """
 from collections import defaultdict
 import csv
@@ -401,6 +403,148 @@ class ND4Cap():
         field_names = field + [item for item in self.test_item_dic.keys()]
         writer = csv.DictWriter(csv_file, field_names = field_names)
         writer.writerow(r)
+
+    def shmoo_log_format(self, setting):
+        if not os.path.exists(self.path_out):
+            os.makedirs(self.path_out)
+        shmoo_start = False
+        print_flag = True
+        self.result = defaultdict(list)
+        shmoo_x_s = shmoo_x_e = shmoo_x_d = 0
+        shmoo_y_s = shmoo_y_e = shmoo_y_d = 0
+        shmoo_x_max = shmoo_y_max = 0
+        shmoo_cnt = 0
+        fout = open(self.csv_file, "w+")
+        line_cnt = -1
+        test_id = -999
+        out_str = ""
+        total_dut = 1
+        with open(self.log_file, 'r', encoding='utf-8') as f: #大檔案儲存
+            for line in f:
+                line_cnt += 1
+                try:
+                    if not print_flag:
+                        line = line.strip() #replace space and \n at top&end
+                    if "Shmoo Start:" in line:
+                        shmoo_start = True
+                        shmoo_cnt += 1
+                        self.result = {}
+                        func_name = line.split(':')[1].split('"')[0]
+                        if setting.get_info(func_name):
+                            shmoo_x_s = Decimal(setting.get_info(func_name)["shmoo_x"][0])
+                            shmoo_x_e = Decimal(setting.get_info(func_name)["shmoo_x"][1])
+                            shmoo_x_d = Decimal(setting.get_info(func_name)["shmoo_x"][2])
+                            shmoo_y_s = Decimal(setting.get_info(func_name)["shmoo_y"][0])
+                            shmoo_y_e = Decimal(setting.get_info(func_name)["shmoo_y"][1])
+                            shmoo_y_d = Decimal(setting.get_info(func_name)["shmoo_y"][2])
+                            shmoo_x_max = int((shmoo_x_e - shmoo_x_s) / shmoo_x_d) + 1
+                            shmoo_y_max = int((shmoo_y_e - shmoo_y_s) / shmoo_y_d) + 1
+                            shmoo_list_max = shmoo_x_max * shmoo_y_max
+                            tmp = (shmoo_y_e - shmoo_y_s)
+                            #self.logger.info(f"func_name:{func_name}, tmp={tmp}")
+                            #self.logger.info(f"func_name:{func_name}, shmoo_y_s={shmoo_y_s}, shmoo_y_e={shmoo_y_e}, shmoo_y_d={shmoo_y_d}")
+                            #self.logger.info(f"func_name:{func_name}, shmoo_x_max={shmoo_x_max}, shmoo_y_max={shmoo_y_max}")
+                        else:
+                            shmoo_start = False
+                        print_flag = False
+                        continue
+                    elif "Shmoo End:" in line:
+                        if self.result:
+                            tmp_str = "Test No." + str(shmoo_cnt) + " " + func_name
+                            fout.write(tmp_str + '\n')
+                            tmp_str = "      Start     Stop     Step      Org  Unit  Swp    Param     Comment\n"
+                            fout.write(tmp_str)
+                            tmp_x_arr = setting.get_info(func_name)["shmoo_x"]
+                            tmp_str = "X: {:>8} {:>8} {:>8} {:>8}  {:4} {:7} {:<5} {}\n".format(*tmp_x_arr)
+                            fout.write(tmp_str)
+                            tmp_y_arr = setting.get_info(func_name)["shmoo_y"]
+                            tmp_str = "Y: {:>8} {:>8} {:>8} {:>8}  {:4} {:7} {:<5} {}\n".format(*tmp_y_arr)
+                            fout.write(tmp_str)
+                            fout.write("\n")
+                            tmp_str = setting.get_info(func_name)["shmoo_y"][4]
+                            fout.write("{:<4}{}\n".format(" ", tmp_str))
+                            for m in range (0, total_dut):
+                                for y in range (0, shmoo_y_max, 1):
+                                    for x in range (0, shmoo_x_max, 1):
+                                        try:
+                                            dut = 'dut' + str(m + 1)
+                                            out_str = out_str + self.result[dut][x + shmoo_x_max * y]
+                                        except Exception as e:
+                                            self.logger.error(f"x:{x}, y:{y}, m:{m}, Exception: {type(e)} - {e}")
+                                    try:
+                                        tmp_str = float(tmp_y_arr[0]) + float(tmp_y_arr[2]) * y
+                                        if tmp_str.is_integer():
+                                            tmp_str = int(tmp_str)
+                                            formatted_str = "{:>10d}".format(tmp_str)
+                                        else:
+                                            formatted_str = "{:>10.2f}".format(tmp_str)
+                                        now_pos = ">" if float(tmp_str) == float(tmp_y_arr[3]) else " "
+                                        if y % 10 == 0:
+                                            now_pos += "+"
+                                        else:
+                                            now_pos += "|"
+                                        fout.write(f"{formatted_str} {now_pos}{out_str}\n")
+                                    except ValueError as e:
+                                        self.logger.error(f"格式化失敗, y: {y}, tmp_y_arr: {tmp_y_arr}, 錯誤: {e}")
+                                    out_str = ""
+                                tmp_str = now_pos = formatted_str = tmp_str1 = tmp_str2 = ""
+                                for x in range (0, shmoo_x_max, 1):
+                                    i = x % 10
+                                    tmp_str = float(tmp_x_arr[0]) + float(tmp_x_arr[2]) * x
+                                    if i == 0:
+                                        tmp_str1 += "+"
+                                        if tmp_str.is_integer():
+                                            tmp_str = int(tmp_str)
+                                            formatted_str = "{:<4d}".format(tmp_str)
+                                        else:
+                                            formatted_str = "{:<4.2f}".format(tmp_str)
+                                        tmp_str2 += formatted_str
+                                    else:
+                                        tmp_str1 += "-"
+                                        tmp_str2 += " " if i >= 4 and i <= 9 else ""
+                                    now_pos += "^" if float(tmp_str) == float(tmp_x_arr[3]) else " "
+                                if i > 0:
+                                    tmp_str2 = tmp_str2 + "     " + str(tmp_x_arr[1]) + "  " + str(tmp_x_arr[4])
+                                fout.write('{:12} {}\n'.format(" ", tmp_str1))
+                                fout.write('{:12} {}\n'.format(" ", now_pos))
+                                fout.write('{:12} {}\n'.format(" ", tmp_str2))
+                                fout.write('__________________________________________________________________\n')
+                                fout.write('\n\n')
+                        for i in range (4):
+                            line = f.readline()
+                        shmoo_start = False
+                        print_flag = True
+                    if shmoo_start and all(key in line for key in ("X=", "Y=")):
+                        match = re.findall(r'X=(\d+),Y=(\d+)', line)
+                        if match:
+                            i, j = map(int, match[0])
+                        test_id = line.split('[')[1].split(']')[0] #抓測項編號
+                        test_id = int(test_id[5:]) #"Test 1234" -> 1234
+                    elif shmoo_start and (str(test_id) in line):
+                        line_part = [x for x in line.split(' ') if x != '']
+                        dut = 'dut' + str(line_part[4])
+                        value = int(line_part[1])
+                        if dut not in self.result:
+                            self.result[dut] = []
+                        if value == '':
+                            self.result[dut].append("X")
+                        elif value == 0:
+                            self.result[dut].append("P")
+                        elif value == 1:
+                            self.result[dut].append(".")
+                        else:
+                            self.logger.warning(f"There is except result: {value}")
+                        test_id = -999
+                    elif print_flag == True:
+                        fout.write(line)
+                        if "Category" in line:
+                            shmoo_cnt = 0 
+                    else:
+                        continue
+                    
+                except Exception as e:
+                    self.logger.error(f"Error happened at line{line_cnt}: {line}, Exception: {type(e)} - {e}")
+            fout.close()
 
 """ main """
 if __name__ == '__main__':
