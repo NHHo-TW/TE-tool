@@ -39,67 +39,51 @@ class ShmooJSON:
         start_flag = False
         shmoo_cnt = 0
         json_dict = defaultdict(dict)
-        header_arr = x_arr = y_arr = []
-        with open(source_file, 'r', encoding='utf-8') as f: #大檔案儲存
+
+        with open(source_file, 'r', encoding='utf-8') as f:
+            header_arr, x_arr, y_arr = [], [], []
+
             for line in f:
-                line = line.strip() #replace space and \n at top&end
+                line = line.strip()
+
                 if "SHMOO START" in line:
                     start_flag = True
                     shmoo_cnt += 1
+                    header_arr, x_arr, y_arr = [], [], []  # Reset arrays
+
                 elif "SHMOO END" in line:
                     start_flag = False
-                    func_name = 'Name' + str(shmoo_cnt)
-                    json_dict[func_name]["header"] = header_arr
-                    json_dict[func_name]["x"] = x_arr
-                    json_dict[func_name]["y"] = y_arr
-                if start_flag:
-                    matches = re.findall(r'\s*(Start)\s*(Stop)\s*(Step)\s*(Org)\s*(Unit)\s*(Swp)\s*(Param)\s*(Comment)\s*', line)
-                    #header_arr = re.search(r'\s*Stop\s*', line)
-                    if matches:
-                        header_arr = [item for match in matches for item in match]
-                        line = f.readline().strip()
-                        x_arr = [x for x in line.split(' ') if x != '']
-                        if len(x_arr) < 9:
-                            x_arr.append("")
-                        line = f.readline().strip()
-                        y_arr = [x for x in line.split(' ') if x != '']
-                        if len(y_arr) < 9:
-                            y_arr.append("")
-        fout = open(self.file_path, "w+")
-        fout.write("[\n")
-        fout.write("    {\n")
-        formatted_str = additional_str = tmp_str = ""
-        for index, key in enumerate(json_dict):
-            formatted_str = "{:8}\"{}\": {}".format(' ', key, "{\n")
-            fout.write(formatted_str)
-            formatted_str = "{:12}{}: {}".format(' ', "\"header\"", "[\n")
-            fout.write(formatted_str)
-            formatted_str = "{:16}{}{}".format(' ', "\"\"", ",\n")
-            fout.write(formatted_str)
-            for i in range(7):
-                formatted_str = "{:16}\"{}\"{}".format(' ', json_dict[key]["header"][i], ",\n") ; fout.write(formatted_str)
-            formatted_str = "{:16}\"{}\"{}".format(' ', json_dict[key]["header"][i+1], "\n") ; fout.write(formatted_str)
-            formatted_str = "{:12}{}{}".format(' ', '', "],\n") ; fout.write(formatted_str)
-            formatted_str = "{:12}{}: {}".format(' ', "\"shmoo_x\"", "[\n"); fout.write(formatted_str)
-            for i in range(1, 8):
-                formatted_str = "{:16}\"{}\"{}".format(' ', json_dict[key]["x"][i], ",\n") ; fout.write(formatted_str)
-            formatted_str = "{:16}\"{}\"{}".format(' ', json_dict[key]["x"][i+1], "\n") ; fout.write(formatted_str)
-            formatted_str = "{:12}{}{}".format(' ', '', "],\n") ; fout.write(formatted_str)
-            formatted_str = "{:12}{}: {}".format(' ', "\"shmoo_y\"", "[\n"); fout.write(formatted_str)
-            for i in range(1, 8):
-                formatted_str = "{:16}\"{}\"{}".format(' ', json_dict[key]["y"][i], ",\n") ; fout.write(formatted_str)
-            formatted_str = "{:16}\"{}\"{}".format(' ', json_dict[key]["y"][i+1], "\n") ; fout.write(formatted_str)
-            formatted_str = "{:12}{}{}".format(' ', '', "]\n") ; fout.write(formatted_str)
-            if index < len(json_dict) - 1:
-                formatted_str = "{:8}{}{}".format(' ', '', "},\n") ; fout.write(formatted_str)
-                tmp_str = "{:8}\"{}\": {}\n{:12}\"{}\"\n{:8}{}\n".format(' ', "shmoo" + str(index), "[", ' ', "other info", ' ', "],")
-            else:
-                formatted_str = "{:8}{}{}".format(' ', '', "}\n") ; fout.write(formatted_str)
-                tmp_str = "{:8}\"{}\": {}\n{:12}\"{}\"\n{:8}{}\n".format(' ', "shmoo" + str(index), "[", ' ', "other info", ' ', "]")
-            additional_str += tmp_str
-        formatted_str = "{:4}{}{}".format(' ', '', "},\n") ; fout.write(formatted_str)
-        additional_str = "    {\n" + additional_str + "    }\n" ; fout.write(additional_str)
-        fout.write("]\n")
+                    func_name = f"Name{shmoo_cnt}"
+                    json_dict[func_name] = {
+                        "header": header_arr,
+                        "x": x_arr,
+                        "y": y_arr
+                    }
+
+                elif start_flag:
+                    match = re.match(r'^\s*(Start|Stop|Step|Org|Unit|Swp|Param|Comment)\s*', line)
+                    if match:
+                        header_arr = line.split()
+                        next_line = f.readline().strip()
+                        x_arr = next_line.split() if next_line else []
+                        next_line = f.readline().strip()
+                        y_arr = next_line.split() if next_line else []
+
+        # Writing JSON output
+        output_data = []
+        for key, value in json_dict.items():
+            output_data.append({
+                key: {
+                    "header": value["header"],
+                    "shmoo_x": value["x"],
+                    "shmoo_y": value["y"]
+                }
+            })
+    
+        output_data.append({"shmoo_meta": ["other info"]})
+
+        with open(self.file_path, "w", encoding="utf-8") as fout:
+            json.dump(output_data, fout, indent=4)
 
 ###################### main ######################
 if __name__=='__main__':
