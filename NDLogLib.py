@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 V06 - 重新命名 NDLogLib.py，做為未來函式庫
@@ -148,7 +149,7 @@ class ND4Cap():
                         BIN = int(temp[-1]) - 1 # bin - 1
                     except:
                         BIN = 0
-                    if dut_assign in multi_site.key(): # always max cat
+                    if dut_assign in multi_site.keys(): # always max cat
                         sample_info = multi_site[dut_assign]
                         #self.die[sample_info[2]] = sample_info + [BIN]
 
@@ -353,10 +354,10 @@ class ND4Cap():
         #samples = sorted(die.key()) # DUT chaos
         samples = self.die.keys()
         k_items = self.test_item_dic.keys()
-        v_items = self.test_item_dic.value()
+        v_items = self.test_item_dic.values()
         with open(self.csv_file, 'w', newline = '') as csv_file: # CSV write
             field_names = ['', '', '', '', '', '', '', 'Test ID'] + [item for item in k_items]
-            writer = csv.DictWriter(csv_file, field_names = field_names)
+            writer = csv.DictWriter(csv_file, fieldnames = field_names)
             writer.writeheader()
             field_names = ['', '', '', '', '', '', '', 'Test Name'] + [item for item in v_items]
             csv.writer(csv_file).writerow(field_names)
@@ -368,7 +369,7 @@ class ND4Cap():
             self.setting_arr_fill(csv_file, 'Unit', self.unit)
             field_names = field + [item for item in k_items]
             csv.writer(csv_file).writerow(field)
-            writer = csv.DictWriter(csv_file, field_names = field_names)
+            writer = csv.DictWriter(csv_file, fieldnames = field_names)
             #writer.writeheader()
             shift_i = 0
             for i, sample in enumerate(samples):
@@ -401,7 +402,7 @@ class ND4Cap():
 
         #field_names = field + [item for item in self.test_item_dic.values()]
         field_names = field + [item for item in self.test_item_dic.keys()]
-        writer = csv.DictWriter(csv_file, field_names = field_names)
+        writer = csv.DictWriter(csv_file, fieldnames = field_names)
         writer.writerow(r)
 
     def shmoo_log_format(self, setting):
