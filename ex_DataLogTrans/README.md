@@ -130,5 +130,5 @@ Currently, this tool is designed for **ADVENTESET T6391**, but future support fo
 如果有任何問題或需求，歡迎聯繫：  
 For any inquiries, feel free to contact:
 
-📧 Email: [your.email@example.com](mailto:your.email@example.com)  
+📧 Email: [moonnight1109@gmail.com](mailto:moonnight1109@gmail.com)  
 📂 GitHub: [NHHo-TW/TE-tool](https://github.com/NHHo-TW/TE-tool)  
