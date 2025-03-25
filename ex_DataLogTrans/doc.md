@@ -1,2 +1,0 @@
-![test log output ex1](https://github.com/NHHo-TW/TE-tool/blob/main/ex_DataLogTrans/log_sample1.png)
-![test log output ex2](https://github.com/NHHo-TW/TE-tool/blob/main/ex_DataLogTrans/log_sample2.png)
