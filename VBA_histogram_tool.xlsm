@@ -1,0 +1,66 @@
+Sub draw_histogram()
+    Dim col_num As Long
+    Dim tmp_str As String
+    
+    col_num = -1
+    
+    '========== User Has to modify by self ==========
+    sheet_name1 = "'your_sheet_name'"
+    sheet_name2 = "your_sheet_name"
+    target_sheet = "output"
+    '================================================
+    
+    Sheets(sheet_name2).Select
+    Range("A1").Select
+    x = ActiveCell.SpecialCells(xlLastCell).Row
+    
+    i = 2
+    j = 2
+    
+    For k = 1 To x
+        tmp_str = Cells(k, 1)
+        If InStr(tmp_str, "Llimit") > 0 Then
+            col_num = Cells(k, 1).End(xlToRight).Column
+            If col_num <= 0 Then
+                MsgBox ("col_num is wrong")
+                ' 這邊帶設定一個強制終止程式的 CODE
+            End If
+    
+            row_num = Cells(k, 1).End(xlDown).Row
+            col_name = ConvertToLetter(col_num)
+            ActiveSheet.Shapes.AddChart2(201, xlColumnClustered).Select
+            tmp_str = "$A$" & k & ":$" & col_name & "$" & row_num
+            ActiveChart.SetSourceData Source:=Range(sheet_name1 & "!" & tmp_str)
+            Application.CutCopyMode = False
+            tmp_str = "$B$" & k - 1 & ":$" & col_name & "$" & k - 1
+            ActiveChart.FullSeriesCollection(1).XValues = "=" & sheet_name1 & "!" & tmp_str
+            ActiveChart.ChartTitle.Text = Worksheets(sheet_name2).Cells(k - 3, 1).Value
+    
+            ActiveChart.Parent.Cut
+            Sheets(target_sheet).Select
+            Cells(j, i).Select
+            ActiveSheet.Paste
+    
+            i = i + 8
+            If i > 16 Then
+                i = 2
+                j = j + 14
+            End If
+            Sheets(sheet_name2).Select
+        End If
+    Next k
+    
+End Sub
+
+Function ConvertToLetter(i_col As Long) As String
+    Dim a As Long
+    Dim b As Long
+    a = i_col
+    ConvertToLetter = ""
+    Do While i_col > 0
+        a = Int((i_col - 1) / 26)
+        b = (i_col - 1) Mod 26
+        ConvertToLetter = Chr(b + 65) & ConvertToLetter
+        i_col = a
+    Loop
+End Function
