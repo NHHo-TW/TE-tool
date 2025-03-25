@@ -45,7 +45,7 @@ The test log from **T6391** resembles the following:
 ![轉換後 Excel | Converted Excel](https://github.com/NHHo-TW/TE-tool/blob/main/ex_DataLogTrans/log_sample_trans.png)
 
 包含 | Contains:
-- **測試站點 | Test site**
+- **DUT | Test site**
 - **測試結果 (Pass/Fail) | Test results (Pass/Fail)**
 - **測試數據值 | Test data values**
 - **測試條件 | Test conditions**
