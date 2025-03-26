@@ -104,6 +104,31 @@ The converted test data can be used for:
 - **測試數據趨勢分析 | Test Data Trend Analysis**：統計不同測試條件下的數據分佈，優化測試規格。  
   Analyze data distribution under various test conditions to optimize test specifications.
 
+
+### 5.1 延伸應用 | Extended Applications
+
+本工具整理後的資料，可根據實驗或分析需求，快速做整理。以下是應用範例：
+
+The processed data from this tool can be quickly organized according to experimental or analytical needs. Below are some application examples:
+
+#### **應用實例 | Application Example**
+
+此工具整理後的數據方便做後續轉換應用，例如將測試數據格式化以供後續分析或可視化使用。
+
+The structured data from this tool facilitates further conversion applications, such as formatting test data for subsequent analysis or visualization.
+
+<p align="center">
+  <img src="https://github.com/NHHo-TW/TE-tool/blob/main/ex_DataLogTrans/adc_spec_define.png" alt="ADC 規格定義 (ADC Specification Definition)" width="600">
+</p>
+
+<p align="center">
+  <img src="https://github.com/NHHo-TW/TE-tool/blob/main/ex_DataLogTrans/application_example.png" alt="應用實例 (Application Example)" width="600">
+</p>
+
+這些應用展示了如何利用本工具來預處理測試數據，以提升測試與驗證的效率。
+
+These examples illustrate how this tool can be used to preprocess test data, enhancing testing and verification efficiency.
+
 ---
 
 ## 6. 常見問題 (FAQ) | Frequently Asked Questions
